@@ -1,4 +1,7 @@
 import type { Compute } from "./types";
+import { pipe } from "./functions";
+import * as RA from "./readonlyArray";
+import * as O from "./option";
 
 export type TypeGuard<A, R extends A> = (x: A) => x is R;
 
@@ -23,13 +26,13 @@ export const refine =
   };
 
 export const number =
-  <S extends number>(literal?: S) =>
-  (x: unknown): x is typeof literal extends undefined ? number : S => {
+  <const S extends ReadonlyArray<number>>(literals?: S) =>
+  (x: unknown): x is typeof literals extends undefined ? number : S[number] => {
     if (typeof x === "number") {
-      if (literal === undefined) {
+      if (literals === undefined) {
         return true;
       } else {
-        return x === literal;
+        return literals.includes(x);
       }
     } else {
       return false;
@@ -63,7 +66,7 @@ export const array =
 export const and =
   <A, C extends A>(ac: TypeGuard<A, C>) =>
   <B extends A>(ab: TypeGuard<A, B>) =>
-  (x: A): x is B & C =>
+  (x: A): x is Compute<B & C> =>
     ab(x) && ac(x);
 
 export const then =
@@ -114,6 +117,19 @@ export const partial =
       return validator ? validator(v) : false;
     });
   };
+
+export const union =
+  <const U extends ReadonlyArray<TypeGuard<unknown, unknown>>>(union: U) =>
+  (
+    x: unknown
+  ): x is {
+    [K in keyof U]: U[K] extends TypeGuard<unknown, infer T> ? T : never;
+  }[number] =>
+    pipe(
+      union,
+      RA.findFirst((member) => !member(x)),
+      O.toBoolean
+    );
 
 export type Infer<X extends TypeGuard<unknown, unknown>> = X extends TypeGuard<
   unknown,

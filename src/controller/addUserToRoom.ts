@@ -30,7 +30,7 @@ export const addUserToRoomEndpoint = endpoint(
                   return {
                     deleteOpenRoom: () => roomDb.deleteById(openedRoom.id),
                     startPendingGame: () =>
-                      gameDb.create({
+                      gameDb.createPending({
                         left: openedRoom.player,
                         right: user,
                       }),

@@ -62,3 +62,5 @@ export function fromPredicate<T>(
 ): (x: T) => Option<T> {
   return (x) => (refinement(x) ? some(x) : none);
 }
+
+export const toBoolean = <T>(option: Option<T>): boolean => isSome(option);

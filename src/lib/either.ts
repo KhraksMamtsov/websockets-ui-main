@@ -3,13 +3,16 @@ import * as O from "./option";
 import { pipe } from "./functions";
 import type { Compute } from "./types";
 
-export type Either<L, R> =
-  | ReturnType<typeof left<L>>
-  | { tag: "right"; right: R };
+export type Right<R> = { tag: "right"; right: R };
+
+export type Either<L, R> = ReturnType<typeof left<L>> | Right<R>;
 
 export const left = <L>(left: L) => ({ tag: "left", left } as const);
 export const right = <R>(right: R): Either<never, R> =>
   ({ tag: "right", right } as const);
+
+export const isRight = <L, R>(either: Either<L, R>): either is Right<R> =>
+  either.tag === "right";
 export const of = <R>(right: R): Either<never, R> =>
   ({ tag: "right", right } as const);
 
@@ -85,10 +88,10 @@ export const flatten = <L, L1, R>(
     chain((x) => x)
   );
 
-export function fromPredicate<T, L, R extends T>(
+export function fromPredicate<T, X extends T, L, R extends T>(
   refinement: TypeGuard<T, R>,
-  onFalse: (x: T) => L
-): (x: T) => Either<L, Compute<R>>;
+  onFalse: (x: X) => L
+): (x: X) => Either<L, Compute<R>>;
 export function fromPredicate<T, L>(
   refinement: (x: T) => boolean,
   onFalse: (x: T) => L
