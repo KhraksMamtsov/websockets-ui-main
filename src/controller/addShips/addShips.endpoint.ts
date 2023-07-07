@@ -10,6 +10,7 @@ import {
 } from "../answers/error.answer";
 import * as G from "../../entity/game";
 import * as B from "../../entity/board";
+import { startGameAnswer } from "../answers/startGame.answer";
 
 export const addShipsEndpoint = endpoint(
   "add_ships",
@@ -56,8 +57,21 @@ export const addShipsEndpoint = endpoint(
             (activeGame) => {
               gameDb.createActive(activeGame);
 
-              activeGame.left.player.ws.send("null");
-              activeGame.right.player.ws.send("null");
+              const currentPlayerIndex = activeGame[activeGame.turn].player.id;
+
+              activeGame.left.player.ws.send(
+                startGameAnswer({
+                  board: activeGame.left.board,
+                  currentPlayerIndex,
+                })
+              );
+
+              activeGame.right.player.ws.send(
+                startGameAnswer({
+                  board: activeGame.right.board,
+                  currentPlayerIndex,
+                })
+              );
             }
           )
         )
