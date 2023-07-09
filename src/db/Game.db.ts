@@ -10,8 +10,13 @@ export class GameDb {
   #active = new Map<number, G.ActiveGame>();
 
   getAllPending = () => [...this.#pending.values()];
+  getAllActive = () => [...this.#active.values()];
 
   getPendingById = (id: number) => pipe(this.#pending, get(id));
+
+  getActiveByPlayer = (player: User) =>
+    pipe(this.getAllActive(), RA.findFirst(G.isWithPlayer(player)));
+
   getPendingByPlayer = (player: User) =>
     pipe(this.getAllPending(), RA.findFirst(G.isWithPlayer(player)));
 
@@ -30,6 +35,10 @@ export class GameDb {
 
   updatePending = (game: G.PendingGame) => {
     this.#pending.set(game.id, game);
+  };
+
+  updateActive = (game: G.ActiveGame) => {
+    this.#active.set(game.id, game);
   };
 
   createActive = (activeGame: G.ActiveGame) => {

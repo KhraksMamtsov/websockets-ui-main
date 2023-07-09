@@ -5,6 +5,7 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
+        "test:watch": "jest --watch",
         "typecheck:watch": "tsc --noEmit --watch",
         "start:back:dev": "nodemon -x npm run start:back:_dev",
         "start:back:_dev": "ts-node-esm --experimental-specifier-resolution=node ./src/ws_server/index.ts",
@@ -16,9 +17,12 @@
     "keywords": [],
     "license": "ISC",
     "devDependencies": {
+        "@types/jest": "^29.5.2",
         "@types/ws": "^8.5.5",
+        "jest": "^29.6.1",
         "nodemon": "^2.0.16",
-        "prettier": "^2.8.8"
+        "prettier": "^2.8.8",
+        "ts-jest": "^29.1.1"
     },
     "dependencies": {
         "ts-node": "^10.9.1",

@@ -4,16 +4,29 @@ import type { Compute } from "./types";
 import { pipe } from "./functions";
 
 export type Option<T> = Some<T> | typeof none;
-export type Some<T> = ReturnType<typeof some<T>>;
+export type Some<T> = { tag: "some"; value: T };
 
 export const none = { tag: "none" } as const;
-export const some = <T>(value: T) => ({ tag: "some", value } as const);
+export const some = <T>(value: T): Option<T> =>
+  ({ tag: "some", value } as const);
 export const isSome = <T>(value: Option<T>): value is Some<T> =>
   value.tag === "some";
 export const match =
   <T, N, S>(onNone: () => N, onSome: (value: T) => S) =>
   (option: Option<T>) =>
     option.tag === "none" ? onNone() : onSome(option.value);
+
+export function filter<A, B extends A>(
+  refinement: TypeGuard<A, B>
+): (either: Option<A>) => Option<B>;
+export function filter<A>(
+  refinement: (x: A) => boolean
+): <B extends A>(either: Option<B>) => Option<B>;
+export function filter<A>(
+  refinement: (x: A) => boolean
+): (either: Option<A>) => Option<A> {
+  return chain((x) => (refinement(x) ? some(x) : none));
+}
 
 export const map =
   <T, S>(fn: (value: T) => S) =>

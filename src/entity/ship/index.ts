@@ -5,8 +5,10 @@ import { mediumShipTg } from "./medium.ship";
 import { largeShipTg } from "./large.ship";
 import { hugeShipTg } from "./huge.ship";
 import type { Ship } from "./shipBase";
+import { unbrokenDeck, attack } from "./shipBase";
 export type { Ship };
 export { Type } from "./type";
+export { attack };
 
 // const asd = {
 //   type: "add_ships",
@@ -53,6 +55,6 @@ export function fromDto(dto: ShipDto): Ship {
 
   return {
     type: dto.type,
-    decks: decksPositions.map((dp) => ({ ...dp, state: "unbroken" })),
+    decks: decksPositions.map((dp) => unbrokenDeck(dp)),
   };
 }

@@ -8,6 +8,8 @@ import { OpenRoomDb } from "../db/OpenRoomDb";
 import { addUserToRoomEndpoint } from "../controller/addUserToRoom";
 import { GameDb } from "../db/Game.db";
 import { addShipsEndpoint } from "../controller/addShips/addShips.endpoint";
+import { attackEndpoint } from "../controller/attack/attack.endpoint";
+import { randomAttackEndpoint } from "../controller/attack/randomAttack.endpoint";
 
 const serverParameters = { port: 3000, host: "localhost" };
 const wss = new WebSocketServer(serverParameters, () => {
@@ -26,6 +28,8 @@ const controller = createController([
   createRoomEndpoint,
   addUserToRoomEndpoint,
   addShipsEndpoint,
+  attackEndpoint,
+  randomAttackEndpoint,
 ] as any);
 
 wss.on("error", console.error);

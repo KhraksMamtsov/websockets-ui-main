@@ -11,6 +11,7 @@ import {
 import * as G from "../../entity/game";
 import * as B from "../../entity/board";
 import { startGameAnswer } from "../answers/startGame.answer";
+import { turnAnswer } from "../answers/turn.answer";
 
 export const addShipsEndpoint = endpoint(
   "add_ships",
@@ -48,41 +49,30 @@ export const addShipsEndpoint = endpoint(
           )
         ),
         E.match(
-          (err) => {
-            ws.send(err);
-          },
-          G.match(
-            //
-            gameDb.updatePending,
-            (activeGame) => {
-              gameDb.createActive(activeGame);
+          (err) => ws.send(err),
+          G.match(gameDb.updatePending, (activeGame) => {
+            gameDb.createActive(activeGame);
 
-              const currentPlayerIndex = activeGame[activeGame.turn].player.id;
+            const currentPlayerIndex = activeGame[activeGame.turn].player.id;
 
-              activeGame.left.player.ws.send(
+            G.sides(activeGame).forEach((side) => {
+              side.player.ws.send(
                 startGameAnswer({
-                  board: activeGame.left.board,
+                  board: side.board,
                   currentPlayerIndex,
                 })
               );
+            });
 
-              activeGame.right.player.ws.send(
-                startGameAnswer({
-                  board: activeGame.right.board,
-                  currentPlayerIndex,
+            G.players(activeGame).forEach((player) => {
+              player.ws.send(
+                turnAnswer({
+                  playerId: currentPlayerIndex,
                 })
               );
-            }
-          )
+            });
+          })
         )
       );
     }
 );
-
-// const qwe = {
-//   type: "error",
-//   data: {
-//     message:
-//       "Invalid board configuration [{position:{x:0,y:2},direction:false,type:huge,length:4},{position:{x:2,y:6},direction:true,type:large,length:3},{position:{x:6,y:3},direction:false,type:large,length:3},{position:{x:7,y:1},direction:false,type:medium,length:2},{position:{x:7,y:5},direction:false,type:medium,length:2},{position:{x:7,y:7},direction:true,type:medium,length:2},{position:{x:5,y:1},direction:false,type:small,length:1},{position:{x:5,y:8},direction:true,type:small,length:1},{position:{x:2,y:0},direction:false,type:small,length:1},{position:{x:2,y:4},direction:true,type:small,length:1}]\\n error: Wrong count of large ships: expected undefined but got 2",
-//   },
-// };

@@ -21,6 +21,10 @@ export const unknownUser = (user: User) =>
 
 export const noPendingGameWithUser = (user: User) =>
   baseError({ message: `There is no pending game with user ${user.name}` });
+export const noActiveGameWithUser = (user: User) =>
+  baseError({ message: `There is no active game with user ${user.name}` });
+
+export const wrongTurn = () => baseError({ message: `Not your turn` });
 
 export const invalidBoardConfiguration = (dto: BoardDto, error: string) =>
   baseError({

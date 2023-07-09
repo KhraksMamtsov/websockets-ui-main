@@ -1,6 +1,8 @@
 import type { User } from "./user";
 import type { Board } from "./board";
 import * as O from "../lib/option";
+import * as RA from "../lib/readonlyArray";
+import { flow, pipe } from "../lib/functions";
 
 export interface ActiveGame {
   tag: "ActiveGame";
@@ -50,6 +52,11 @@ export const createActive = (args: {
   right: args.right,
 });
 
+export const toggleTurn = (activeGame: ActiveGame): ActiveGame => ({
+  ...activeGame,
+  turn: activeGame.turn === "left" ? "right" : "left",
+});
+
 export const setPlayersBoard =
   (args: { player: User; board: Board }) =>
   (pendingGame: PendingGame): Game => {
@@ -92,8 +99,34 @@ export const match =
   (game: Game): P | A =>
     game.tag === "PendingGame" ? onPending(game) : onActive(game);
 
-export const getOppositePlayer = (player: User) => (game: Game) =>
-  game.left.player.id === player.id ? game.right.player : game.left.player;
+export const getEnemySide =
+  (player: User) =>
+  <G extends Game>(game: G): G["left" | "right"] =>
+    game.left.player.id === player.id ? game.right : game.left;
+
+export const isPlayerTurn = (player: User) => {
+  return (game: ActiveGame): boolean => {
+    return game[game.turn].player.id === player.id;
+  };
+};
+export const getPlayersSide =
+  (player: User) =>
+  <G extends Game>(game: G): G["left" | "right"] =>
+    game.left.player.id === player.id ? game.left : game.right;
+
+export const players = (game: ActiveGame) => {
+  return pipe(
+    game,
+    sides,
+    RA.map((s) => s.player)
+  );
+};
+export const sides = (game: ActiveGame) => {
+  return [game.left, game.right];
+};
+
+export const getEnemy = (player: User) =>
+  flow(getEnemySide(player), (x) => x.player);
 
 export const createPending = (args: {
   id: number;

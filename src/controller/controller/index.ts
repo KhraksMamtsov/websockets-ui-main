@@ -26,22 +26,22 @@ const rawCommandTG = <C extends string>(commandType: C) =>
     id: tg.number(),
   });
 
+export type HandlerDeps = Readonly<{
+  ws: WebSocket;
+  userDb: UserDb;
+  wss: WebSocketServer;
+  roomDb: OpenRoomDb;
+  gameDb: GameDb;
+  winnerDb: WinnerDb;
+}>;
+
 export function endpoint<
   C extends string,
   B extends tg.TypeGuard<unknown, unknown>
 >(
   command: C,
   data: B,
-  handler: (
-    command: ParsedCommand<C, B>
-  ) => (resources: {
-    ws: WebSocket;
-    userDb: UserDb;
-    wss: WebSocketServer;
-    roomDb: OpenRoomDb;
-    gameDb: GameDb;
-    winnerDb: WinnerDb;
-  }) => void
+  handler: (command: ParsedCommand<C, B>) => (resources: HandlerDeps) => void
 ) {
   return [command, data, handler] as const;
 }
@@ -114,7 +114,7 @@ export function createController(
   };
 }
 
-type ParsedCommand<
+export type ParsedCommand<
   K extends string,
   TG extends tg.TypeGuard<unknown, unknown>
 > = Compute<Omit<Command<K>, "data"> & { readonly data: tg.Infer<TG> }>;
