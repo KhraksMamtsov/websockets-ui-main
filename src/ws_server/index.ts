@@ -10,6 +10,7 @@ import { GameDb } from "../db/Game.db";
 import { addShipsEndpoint } from "../controller/addShips/addShips.endpoint";
 import { attackEndpoint } from "../controller/attack/attack.endpoint";
 import { randomAttackEndpoint } from "../controller/attack/randomAttack.endpoint";
+import { closeConnection } from "../controller/closeConnection";
 
 const serverParameters = { port: 3000, host: "localhost" };
 const wss = new WebSocketServer(serverParameters, () => {
@@ -30,7 +31,7 @@ const controller = createController([
   addShipsEndpoint,
   attackEndpoint,
   randomAttackEndpoint,
-] as any);
+] as any[]);
 
 wss.on("error", console.error);
 
@@ -39,6 +40,10 @@ wss.on("connection", (ws) => {
     if (data instanceof Buffer) {
       controller(data)({ ws, wss, userDb, winnersDb, roomDb, gameDb });
     }
+  });
+
+  ws.on("close", () => {
+    closeConnection({ ws, wss, userDb, winnersDb, roomDb, gameDb });
   });
 });
 wss.on("close", console.log);

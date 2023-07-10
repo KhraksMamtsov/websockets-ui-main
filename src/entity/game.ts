@@ -33,7 +33,7 @@ export interface PendingGame {
 
 export type Game = ActiveGame | PendingGame;
 
-export const createActive = (args: {
+export const active = (args: {
   id: number;
   turn: "left" | "right";
   left: {
@@ -50,6 +50,23 @@ export const createActive = (args: {
   id: args.id,
   left: args.left,
   right: args.right,
+});
+
+export const pending = (args: {
+  id: number;
+  left: User;
+  right: User;
+}): PendingGame => ({
+  tag: "PendingGame",
+  id: args.id,
+  left: {
+    player: args.left,
+    board: O.none,
+  },
+  right: {
+    player: args.right,
+    board: O.none,
+  },
 });
 
 export const toggleTurn = (activeGame: ActiveGame): ActiveGame => ({
@@ -84,7 +101,7 @@ export const setPlayersBoard =
     }
 
     if (O.isSome(game.left.board) && O.isSome(game.right.board)) {
-      return createActive({
+      return active({
         turn: "left",
         id: game.id,
         left: {
@@ -142,20 +159,3 @@ export const sides = (game: ActiveGame) => {
 
 export const getEnemy = (player: User) =>
   flow(getEnemySide(player), (x) => x.player);
-
-export const createPending = (args: {
-  id: number;
-  left: User;
-  right: User;
-}): PendingGame => ({
-  tag: "PendingGame",
-  id: args.id,
-  left: {
-    player: args.left,
-    board: O.none,
-  },
-  right: {
-    player: args.right,
-    board: O.none,
-  },
-});

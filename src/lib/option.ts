@@ -11,6 +11,35 @@ export const some = <T>(value: T): Option<T> =>
   ({ tag: "some", value } as const);
 export const isSome = <T>(value: Option<T>): value is Some<T> =>
   value.tag === "some";
+
+export const of = <A>(value: A): Option<A> => some(value);
+
+export const Do = of({});
+export const bindTo =
+  <const N extends string>(name: N) =>
+  <A>(option: Option<A>): Option<{ [K in N]: A }> =>
+    pipe(
+      option,
+      map((p) => ({ [name]: p } as any))
+    );
+
+export const bind =
+  <const N extends string, A1, CA extends {}>(
+    name: N,
+    fn: (ctx: CA) => Option<A1>
+  ) =>
+  (context: Option<CA>): Option<Compute<CA & { [K in N]: A1 }>> => {
+    return pipe(
+      context,
+      chain((cr) =>
+        pipe(
+          fn(cr),
+          map((r) => ({ ...cr, [name]: r } as any))
+        )
+      )
+    );
+  };
+
 export const match =
   <T, N, S>(onNone: () => N, onSome: (value: T) => S) =>
   (option: Option<T>) =>

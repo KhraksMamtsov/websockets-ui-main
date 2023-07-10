@@ -2,6 +2,8 @@ import type { User } from "../entity/user";
 import * as R from "../entity/openRoom";
 import { pipe } from "../lib/functions";
 import { get } from "../lib/map";
+import * as O from "../lib/option";
+import * as RA from "../lib/readonlyArray";
 
 export class OpenRoomDb {
   #currentIndex = 0;
@@ -24,6 +26,14 @@ export class OpenRoomDb {
     this.#rooms.delete(id);
 
     return this.getAll();
+  };
+  deleteByOwner = (owner: User) => {
+    return pipe(
+      this.getAll(),
+      RA.findFirst((x) => x.player.id === owner.id),
+      O.tap((r) => this.deleteById(r.id)),
+      O.map(() => this.getAll())
+    );
   };
 
   getById = (id: number) => pipe(this.#rooms, get(id));

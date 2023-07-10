@@ -30,17 +30,25 @@ export const regEndpoint = endpoint(
             O.match(
               () =>
                 pipe(
-                  userDb.write({
+                  userDb.create({
                     ws,
                     name: validUserDto.name,
                     password: validUserDto.password,
                   }),
                   E.right
                 ),
-              (x) =>
-                x.password === validUserDto.password
-                  ? E.right(x)
-                  : E.left(regError("Wrong password"))
+              (x) => {
+                if (x.password === validUserDto.password) {
+                  userDb.updateOrCreate({
+                    ws,
+                    name: validUserDto.name,
+                    password: validUserDto.password,
+                  });
+                  return E.right(x);
+                } else {
+                  return E.left(regError("Wrong password"));
+                }
+              }
             )
           );
         }),

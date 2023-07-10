@@ -24,16 +24,43 @@ export class UserDb {
       O.map(([_, u]) => u)
     );
 
-  write = (user: { password: string; name: string; ws: WebSocket }) => {
+  create = (userData: { password: string; name: string; ws: WebSocket }) => {
     const newUser: User = {
-      name: user.name,
-      password: user.password,
-      ws: user.ws,
+      name: userData.name,
+      password: userData.password,
+      ws: userData.ws,
       id: this.#currentIndex,
     };
-    this.#users.set(user.name, newUser);
-
     this.#currentIndex++;
+
+    this.#users.set(newUser.name, newUser);
+
+    return newUser;
+  };
+
+  updateOrCreate = (userData: {
+    password: string;
+    name: string;
+    ws: WebSocket;
+  }) => {
+    const newUser = pipe(
+      this.getByName(userData.name),
+      O.map((user) => {
+        return { ...user, ws: userData.ws } as User;
+      }),
+      O.get(() => {
+        const newUser: User = {
+          name: userData.name,
+          password: userData.password,
+          ws: userData.ws,
+          id: this.#currentIndex,
+        };
+        this.#currentIndex++;
+        return newUser;
+      })
+    );
+
+    this.#users.set(newUser.name, newUser);
 
     return newUser;
   };

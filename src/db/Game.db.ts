@@ -22,7 +22,7 @@ export class GameDb {
     pipe(this.getAllPending(), RA.findFirst(G.isWithPlayer(player)));
 
   createPending = (players: { left: User; right: User }) => {
-    const newGame = G.createPending({ ...players, id: this.#currentIndex++ });
+    const newGame = G.pending({ ...players, id: this.#currentIndex++ });
     this.#pending.set(newGame.id, newGame);
 
     this.#currentIndex++;
