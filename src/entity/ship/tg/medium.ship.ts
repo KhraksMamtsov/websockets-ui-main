@@ -1,6 +1,6 @@
-import * as tg from "../../lib/typeGuard";
-import { pipe } from "../../lib/functions";
-import { Type } from "./type";
+import * as tg from "../../../lib/typeGuard";
+import { pipe } from "../../../lib/functions";
+import { Type } from "../type";
 
 const twoVertical = tg.shape({
   direction: tg.boolean(true),

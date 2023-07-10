@@ -1,5 +1,5 @@
-import * as tg from "../../lib/typeGuard";
-import { Type } from "./type";
+import * as tg from "../../../lib/typeGuard";
+import { Type } from "../type";
 
 export const smallShipTg = tg.shape({
   type: tg.string([Type.S]),
