@@ -1,14 +1,14 @@
 import { attack, Type } from "../src/entity/ship";
-import { DeckState } from "../src/entity/ship/shipBase";
 import * as O from "../src/lib/option";
+import { DeckState } from "../src/entity/ship/deck";
 
 const testShip = {
   type: Type.H,
   decks: [
-    { state: DeckState.BROKEN, x: 1, y: 0 },
-    { state: DeckState.UNBROKEN, x: 2, y: 0 },
-    { state: DeckState.UNBROKEN, x: 3, y: 0 },
-    { state: DeckState.BROKEN, x: 4, y: 0 },
+    { state: DeckState.BROKEN, coords: { x: 1, y: 0 } },
+    { state: DeckState.UNBROKEN, coords: { x: 2, y: 0 } },
+    { state: DeckState.UNBROKEN, coords: { x: 3, y: 0 } },
+    { state: DeckState.BROKEN, coords: { x: 4, y: 0 } },
   ],
 };
 describe("ship base", () => {

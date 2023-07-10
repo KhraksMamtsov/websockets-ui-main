@@ -4,41 +4,14 @@ import { pipe } from "../../lib/functions";
 import * as RA from "../../lib/readonlyArray";
 import type { Coords } from "../coords";
 import * as AR from "../attackResult";
-
-type Deck = BrokenDeck | UnbrokenDeck;
-type BrokenDeck = ReturnType<typeof brokenDeck>;
-type UnbrokenDeck = ReturnType<typeof unbrokenDeck>;
-
-export enum DeckState {
-  BROKEN = "broken",
-  UNBROKEN = "unbroken",
-}
-
-export const deck =
-  <T extends DeckState>(state: T) =>
-  (coords: Coords) =>
-    ({
-      ...coords,
-      state,
-    } as const);
-
-export const brokenDeck = deck(DeckState.BROKEN);
-export const isBrokenDeck = (deck: Deck): deck is BrokenDeck =>
-  deck.state === DeckState.BROKEN;
-
-export const unbrokenDeck = deck(DeckState.UNBROKEN);
+import * as D from "./deck";
 
 export interface Ship {
   type: Type;
-  decks: Deck[];
+  decks: D.Deck[];
 }
 
-export const isKilled = (ship: Ship) =>
-  pipe(ship.decks, RA.every(isBrokenDeck));
-
-function isDeckWithCoords(coords: Coords) {
-  return (deck: Deck) => deck.x === coords.x && deck.y === coords.y;
-}
+export const isKilled = (ship: Ship) => pipe(ship.decks, RA.every(D.isBroken));
 
 export const attack =
   (attackCoords: Coords) =>
@@ -52,12 +25,12 @@ export const attack =
       ship.decks,
       RA.reduce(
         (acc, deck) => {
-          if (isDeckWithCoords(attackCoords)(deck)) {
-            const attackResult = isBrokenDeck(deck)
+          if (D.isWithCoords(attackCoords)(deck)) {
+            const attackResult = D.isBroken(deck)
               ? AR.double(attackCoords)
               : AR.shot(attackCoords);
             return {
-              decks: [...acc.decks, brokenDeck(deck)],
+              decks: [...acc.decks, D.broken(deck.coords)],
               attackResult: O.some(attackResult),
             };
           } else {
@@ -68,7 +41,7 @@ export const attack =
           }
         },
         {
-          decks: [] as Deck[],
+          decks: [] as D.Deck[],
           attackResult: O.none as O.Option<AR.Shot | AR.Double>,
         }
       ),
@@ -79,7 +52,7 @@ export const attack =
           x.attackResult,
           O.map((attackResult) => {
             if (AR.isShot(attackResult)) {
-              if (newShip.decks.every(isBrokenDeck)) {
+              if (newShip.decks.every(D.isBroken)) {
                 return AR.killed(attackResult.coords);
               } else {
                 return attackResult;

@@ -74,6 +74,7 @@ const coordsOnBoard = ({ x, y }: C.Coords) => {
 const getShipNeighbors = (ship: S.Ship) =>
   pipe(
     ship.decks,
+    RA.map((x) => x.coords),
     RA.chain(({ x, y }) => [
       { x /*  */, y: y + 1 },
       { x: x + 1, y: y + 1 },
@@ -86,7 +87,14 @@ const getShipNeighbors = (ship: S.Ship) =>
     ]),
     RA.filter(coordsOnBoard),
     RA.uniq(C.isEqual),
-    RA.filter((neighbor) => !pipe(ship.decks, RA.some(C.isEqual(neighbor))))
+    RA.filter(
+      (neighbor) =>
+        !pipe(
+          ship.decks,
+          RA.map((x) => x.coords),
+          RA.some(C.isEqual(neighbor))
+        )
+    )
   );
 
 const isAttackInFiredCells =
@@ -111,7 +119,10 @@ export const attack = (attackCoords: C.Coords) => (board: Board) => {
             O.map((ar) => {
               if (ar.type === AR.AttackResultType.KILLED) {
                 return [
-                  ...pipe(shipsAttackResult.newShip.decks, RA.map(AR.killed)),
+                  ...pipe(
+                    shipsAttackResult.newShip.decks,
+                    RA.map((x) => AR.killed(x.coords))
+                  ),
                   ...pipe(
                     shipsAttackResult.newShip,
                     getShipNeighbors,
