@@ -2,6 +2,7 @@ import * as O from "./option";
 import type { TypeGuard } from "./typeGuard";
 import * as E from "./either";
 import { pipe } from "./functions";
+import type { Eq } from "./eq";
 
 export function findFirst<A, B extends A>(
   refinement: TypeGuard<A, B>
@@ -15,8 +16,13 @@ export function findFirst<A>(
 export function findFirst<A>(predicate: (el: A) => boolean) {
   return (array: ReadonlyArray<A>) => O.fromUndefinable(array.find(predicate));
 }
+
 export function some<A>(predicate: (el: A) => boolean) {
-  return (array: ReadonlyArray<A>) => array.some(predicate);
+  return (array: ReadonlyArray<A>) => array.some((a) => predicate(a));
+}
+
+export function every<A>(predicate: (el: A) => boolean) {
+  return (array: ReadonlyArray<A>) => array.every((a) => predicate(a));
 }
 
 export const of = <A>(a: A) => [a];
@@ -30,6 +36,23 @@ export function filter<A>(
 export function filter<A>(predicate: (el: A) => boolean) {
   return (array: ReadonlyArray<A>) => array.filter(predicate);
 }
+
+export const uniq =
+  <A>(eq: Eq<A>) =>
+  (array: ReadonlyArray<A>): Array<A> => {
+    if (array.length === 1) {
+      return array as Array<A>;
+    }
+    const [head, ...tail] = array;
+    const out: Array<A> = [head!];
+    for (const a of tail) {
+      const isEqualA = eq(a);
+      if (out.every((o) => !isEqualA(o))) {
+        out.push(a);
+      }
+    }
+    return out;
+  };
 
 export const map =
   <A, A1>(fn: (el: A) => A1) =>

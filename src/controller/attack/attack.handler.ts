@@ -1,6 +1,7 @@
 import type { HandlerDeps, ParsedCommand } from "../controller";
 import { attackTg } from "./attack.tg";
 import { pipe } from "../../lib/functions";
+import * as O from "../../lib/option";
 import * as E from "../../lib/either";
 import * as ErrAnsw from "../answers/error.answer";
 import { noActiveGameWithUser, wrongTurn } from "../answers/error.answer";
@@ -11,17 +12,19 @@ import * as AR from "../../entity/attackResult";
 import { turnAnswer } from "../answers/turn.answer";
 import { attackAnswer } from "../answers/attack.answer";
 import { isMiss } from "../../entity/attackResult";
+import { updateWinnersAnswer } from "../answers/updateWinners.answer";
+import { finishAnswer } from "../answers/finish.answer";
 
 export const attackHandler =
   (command: Pick<ParsedCommand<"attack", typeof attackTg>, "data">) =>
-  ({ userDb, ws, gameDb }: HandlerDeps) => {
+  ({ userDb, ws, wss, gameDb, winnersDb }: HandlerDeps) => {
     pipe(
       userDb.getByWebSocket(ws),
       E.fromOption(() => ErrAnsw.unAuth),
       E.bindTo("user"),
       E.bind("game", ({ user }) =>
         pipe(
-          gameDb.getActiveByPlayer(user),
+          gameDb.getActiveById(command.data.gameId),
           E.fromOption(() => noActiveGameWithUser(user))
         )
       ),
@@ -40,9 +43,7 @@ export const attackHandler =
           ({ newBoard, attackResults }) => {
             enemy.board = newBoard;
 
-            const newGame = G.toggleTurn(x.game);
-
-            gameDb.updateActive(newGame);
+            let newGame = x.game;
 
             const [realAttacks, doubles] = pipe(
               attackResults,
@@ -71,11 +72,37 @@ export const attackHandler =
                 );
               });
 
-              if (!realAttacks.some(isMiss)) {
+              pipe(
+                newGame,
+                G.getWinner,
+                O.match(
+                  () => {},
+                  (winner) => {
+                    const winners = winnersDb.writeWinner(winner).getAll();
+
+                    G.players(x.game).forEach((p) =>
+                      p.ws.send(finishAnswer({ player: winner }))
+                    );
+
+                    wss.clients.forEach((client) =>
+                      client.send(updateWinnersAnswer(winners))
+                    );
+                  }
+                )
+              );
+
+              if (realAttacks.every(isMiss)) {
+                newGame = G.toggleTurn(newGame);
                 G.players(x.game).forEach((p) =>
                   p.ws.send(turnAnswer({ playerId: enemy.player.id }))
                 );
+              } else {
+                G.players(x.game).forEach((p) =>
+                  p.ws.send(turnAnswer({ playerId: x.user.id }))
+                );
               }
+
+              gameDb.updateActive(newGame);
             }
           }
         );

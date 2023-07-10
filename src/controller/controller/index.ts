@@ -32,7 +32,7 @@ export type HandlerDeps = Readonly<{
   wss: WebSocketServer;
   roomDb: OpenRoomDb;
   gameDb: GameDb;
-  winnerDb: WinnerDb;
+  winnersDb: WinnerDb;
 }>;
 
 export function endpoint<

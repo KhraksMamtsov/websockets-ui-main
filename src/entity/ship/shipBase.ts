@@ -1,16 +1,13 @@
 import { Type } from "./type";
 import * as O from "../../lib/option";
 import { pipe } from "../../lib/functions";
-import { reduce } from "../../lib/readonlyArray";
+import * as RA from "../../lib/readonlyArray";
 import type { Coords } from "../coords";
 import * as AR from "../attackResult";
 
 type Deck = BrokenDeck | UnbrokenDeck;
 type BrokenDeck = ReturnType<typeof brokenDeck>;
 type UnbrokenDeck = ReturnType<typeof unbrokenDeck>;
-
-export const isBrokenDeck = (deck: Deck): deck is BrokenDeck =>
-  deck.state === DeckState.BROKEN;
 
 export enum DeckState {
   BROKEN = "broken",
@@ -26,6 +23,8 @@ export const deck =
     } as const);
 
 export const brokenDeck = deck(DeckState.BROKEN);
+export const isBrokenDeck = (deck: Deck): deck is BrokenDeck =>
+  deck.state === DeckState.BROKEN;
 
 export const unbrokenDeck = deck(DeckState.UNBROKEN);
 
@@ -33,6 +32,9 @@ export interface Ship {
   type: Type;
   decks: Deck[];
 }
+
+export const isKilled = (ship: Ship) =>
+  pipe(ship.decks, RA.every(isBrokenDeck));
 
 function isDeckWithCoords(coords: Coords) {
   return (deck: Deck) => deck.x === coords.x && deck.y === coords.y;
@@ -48,7 +50,7 @@ export const attack =
   } => {
     return pipe(
       ship.decks,
-      reduce(
+      RA.reduce(
         (acc, deck) => {
           if (isDeckWithCoords(attackCoords)(deck)) {
             const attackResult = isBrokenDeck(deck)

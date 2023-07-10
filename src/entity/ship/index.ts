@@ -5,10 +5,10 @@ import { mediumShipTg } from "./medium.ship";
 import { largeShipTg } from "./large.ship";
 import { hugeShipTg } from "./huge.ship";
 import type { Ship } from "./shipBase";
-import { unbrokenDeck, attack } from "./shipBase";
+import { unbrokenDeck, attack, isKilled } from "./shipBase";
 export type { Ship };
 export { Type } from "./type";
-export { attack };
+export { attack, isKilled };
 
 // const asd = {
 //   type: "add_ships",

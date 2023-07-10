@@ -5,6 +5,7 @@ import { pipe } from "../../lib/functions";
 import * as O from "../../lib/option";
 import * as E from "../../lib/either";
 import { updateRoomsAnswer } from "../answers/updateRoom.answer";
+import { updateWinnersAnswer } from "../answers/updateWinners.answer";
 
 export const regEndpoint = endpoint(
   "reg",
@@ -13,7 +14,7 @@ export const regEndpoint = endpoint(
     password: tg.string(),
   }),
   (command) =>
-    ({ ws, userDb, roomDb }) => {
+    ({ ws, userDb, roomDb, winnersDb }) => {
       pipe(
         {
           name: command.data.name,
@@ -47,6 +48,9 @@ export const regEndpoint = endpoint(
           (error) => ws.send(error),
           (x) => {
             ws.send(regSuccess(x));
+
+            ws.send(updateWinnersAnswer(winnersDb.getAll()));
+
             ws.send(updateRoomsAnswer(roomDb.getAll()));
           }
         )

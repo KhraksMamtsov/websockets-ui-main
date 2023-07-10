@@ -54,6 +54,11 @@ export const boolean =
   };
 
 export const unknown = (_: unknown): _ is unknown => true;
+export const not =
+  <A, B extends A>(ab: TypeGuard<A, B>): TypeGuard<A, Exclude<A, B>> =>
+  (x): x is Exclude<A, B> =>
+    !ab(x);
+
 const _null = (x: unknown): x is null => x === null;
 
 export { _null as null };

@@ -1,7 +1,7 @@
 import { pipe } from "../lib/functions";
 import type { User } from "../entity/user";
 import * as G from "../entity/game";
-import { get } from "../lib/map";
+import * as M from "../lib/map";
 import * as RA from "../lib/readonlyArray";
 
 export class GameDb {
@@ -12,7 +12,8 @@ export class GameDb {
   getAllPending = () => [...this.#pending.values()];
   getAllActive = () => [...this.#active.values()];
 
-  getPendingById = (id: number) => pipe(this.#pending, get(id));
+  getActiveById = (id: number) => pipe(this.#active, M.get(id));
+  getPendingById = (id: number) => pipe(this.#pending, M.get(id));
 
   getActiveByPlayer = (player: User) =>
     pipe(this.getAllActive(), RA.findFirst(G.isWithPlayer(player)));

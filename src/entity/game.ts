@@ -1,5 +1,5 @@
 import type { User } from "./user";
-import type { Board } from "./board";
+import * as B from "./board";
 import * as O from "../lib/option";
 import * as RA from "../lib/readonlyArray";
 import { flow, pipe } from "../lib/functions";
@@ -10,11 +10,11 @@ export interface ActiveGame {
   turn: "left" | "right";
   left: {
     player: User;
-    board: Board;
+    board: B.Board;
   };
   right: {
     player: User;
-    board: Board;
+    board: B.Board;
   };
 }
 
@@ -23,11 +23,11 @@ export interface PendingGame {
   id: number;
   left: {
     player: User;
-    board: O.Option<Board>;
+    board: O.Option<B.Board>;
   };
   right: {
     player: User;
-    board: O.Option<Board>;
+    board: O.Option<B.Board>;
   };
 }
 
@@ -38,11 +38,11 @@ export const createActive = (args: {
   turn: "left" | "right";
   left: {
     player: User;
-    board: Board;
+    board: B.Board;
   };
   right: {
     player: User;
-    board: Board;
+    board: B.Board;
   };
 }): ActiveGame => ({
   tag: "ActiveGame",
@@ -57,8 +57,23 @@ export const toggleTurn = (activeGame: ActiveGame): ActiveGame => ({
   turn: activeGame.turn === "left" ? "right" : "left",
 });
 
+export const getWinner = (game: ActiveGame) => {
+  return pipe(
+    game.right,
+    O.fromPredicate((r) => B.isKilled(r.board)),
+    O.map(() => game.left.player),
+    O.alt(() =>
+      pipe(
+        game.left,
+        O.fromPredicate((l) => B.isKilled(l.board)),
+        O.map(() => game.right.player)
+      )
+    )
+  );
+};
+
 export const setPlayersBoard =
-  (args: { player: User; board: Board }) =>
+  (args: { player: User; board: B.Board }) =>
   (pendingGame: PendingGame): Game => {
     const game = pendingGame;
 

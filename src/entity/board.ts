@@ -17,6 +17,9 @@ export type Board = Readonly<{
 
 type FiredCells = ReadonlyArray<C.Coords>;
 
+export const isKilled = (board: Board) =>
+  pipe(board.domain.ships, RA.every(S.isKilled));
+
 const typeToCountMap: Readonly<Record<S.Type, 1 | 2 | 3 | 4>> = {
   [S.Type.H]: 1,
   [S.Type.L]: 2,
@@ -72,12 +75,17 @@ const getShipNeighbors = (ship: S.Ship) =>
   pipe(
     ship.decks,
     RA.chain(({ x, y }) => [
-      { x: x + 1, y },
-      { x: x - 1, y },
-      { x, y: y + 1 },
-      { x, y: y - 1 },
+      { x /*  */, y: y + 1 },
+      { x: x + 1, y: y + 1 },
+      { x: x + 1, y /*  */ },
+      { x: x + 1, y: y - 1 },
+      { x /*  */, y: y - 1 },
+      { x: x - 1, y: y - 1 },
+      { x: x - 1, y /*  */ },
+      { x: x - 1, y: y + 1 },
     ]),
     RA.filter(coordsOnBoard),
+    RA.uniq(C.isEqual),
     RA.filter((neighbor) => !pipe(ship.decks, RA.some(C.isEqual(neighbor))))
   );
 

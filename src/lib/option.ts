@@ -69,6 +69,9 @@ export function fromPredicate<TG extends TypeGuard<any, any>>(
   : never;
 export function fromPredicate<T>(
   refinement: (x: T) => boolean
+): <B extends T>(x: B) => Option<B>;
+export function fromPredicate<T>(
+  refinement: (x: T) => boolean
 ): (x: T) => Option<T>;
 export function fromPredicate<T>(
   refinement: (x: T) => boolean
