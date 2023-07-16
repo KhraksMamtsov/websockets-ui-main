@@ -3,10 +3,10 @@ import * as RA from "../lib/readonlyArray";
 import * as E from "../lib/either";
 import * as O from "../lib/option";
 import { flow, pipe } from "../lib/functions";
+
 import * as S from "./ship";
 import * as C from "./coords";
 import * as AR from "./attackResult";
-import { DeckState } from "./ship/deck";
 
 export type Board = Readonly<{
   dto: BoardDto;
