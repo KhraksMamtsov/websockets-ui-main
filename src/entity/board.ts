@@ -6,6 +6,7 @@ import { flow, pipe } from "../lib/functions";
 import * as S from "./ship";
 import * as C from "./coords";
 import * as AR from "./attackResult";
+import { DeckState } from "./ship/deck";
 
 export type Board = Readonly<{
   dto: BoardDto;
@@ -182,3 +183,22 @@ export const attack = (attackCoords: C.Coords) => (board: Board) => {
     }
   );
 };
+
+const boardRow = RA.range([1, 10]);
+const boardColumn = RA.range([1, 10]);
+
+const boardCoords = pipe(
+  boardRow,
+  RA.chain((x) => pipe(boardColumn, RA.map(C.coords(x))))
+);
+
+export function getEmptyCoords(board: Board): ReadonlyArray<C.Coords> {
+  const allFiredCoords = pipe(
+    board.domain.ships,
+    RA.chain(S.getBrokenDecks),
+    RA.map((x) => x.coords),
+    RA.append(board.domain.firedCells)
+  );
+
+  return pipe(boardCoords, RA.subtract(C.isEqual)(allFiredCoords));
+}

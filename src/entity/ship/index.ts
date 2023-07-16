@@ -5,11 +5,11 @@ import { mediumShipTg } from "./tg/medium.ship";
 import { largeShipTg } from "./tg/large.ship";
 import { hugeShipTg } from "./tg/huge.ship";
 import type { Ship } from "./shipBase";
-import { attack, isKilled } from "./shipBase";
+import { attack, isKilled, getBrokenDecks } from "./shipBase";
 import { unbroken } from "./deck";
 export type { Ship };
 export { Type } from "./type";
-export { attack, isKilled };
+export { attack, isKilled, getBrokenDecks };
 
 export const shipTg = tg.union([
   smallShipTg,

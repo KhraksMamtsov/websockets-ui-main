@@ -6,6 +6,10 @@ export type Coords = {
   readonly y: number;
 };
 
+export const coords =
+  (x: number) =>
+  (y: number): Coords => ({ x, y });
+
 export const isEqual: Eq<Coords> = (a) => (b) => a.x === b.x && a.y === b.y;
 
 export const random = () => {

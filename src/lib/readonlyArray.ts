@@ -59,6 +59,11 @@ export const map =
   (array: ReadonlyArray<A>) =>
     array.map(fn);
 
+export const append =
+  <A>(_this: ReadonlyArray<A>) =>
+  <A1>(to: ReadonlyArray<A1>): ReadonlyArray<A | A1> =>
+    [...to, ..._this];
+
 export const chain =
   <A, A1>(fn: (el: A) => ReadonlyArray<A1>) =>
   (array: ReadonlyArray<A>) =>
@@ -143,3 +148,12 @@ export const reduce =
   <A, A1>(fn: (acc: A1, el: A) => A1, acc: A1) =>
   (array: ReadonlyArray<A>) =>
     array.reduce(fn, acc);
+
+export const subtract =
+  <A>(eq: Eq<A>) =>
+  (_this: ReadonlyArray<A>) =>
+  (from: ReadonlyArray<A>): ReadonlyArray<A> =>
+    pipe(
+      from,
+      filter((fromEl) => pipe(_this, some(eq(fromEl))))
+    );

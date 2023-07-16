@@ -14,8 +14,11 @@ import { attackAnswer } from "../answers/attack.answer";
 import { isMiss } from "../../entity/attackResult";
 import { updateWinnersAnswer } from "../answers/updateWinners.answer";
 import { finishAnswer } from "../answers/finish.answer";
+import type { Coords } from "../../entity/coords";
+import type { Board } from "../../entity/board";
 
 export const attackHandler =
+  (getAttackCoords?: (board: Board) => Coords) =>
   (command: Pick<ParsedCommand<"attack", typeof attackTg>, "data">) =>
   ({ userDb, ws, wss, gameDb, winnersDb }: HandlerDeps) => {
     pipe(
@@ -34,12 +37,14 @@ export const attackHandler =
       E.map((x) => {
         const enemy = G.getEnemySide(x.user)(x.game);
 
+        const attackCoords = getAttackCoords?.(enemy.board) ?? {
+          x: command.data.x,
+          y: command.data.y,
+        };
+
         pipe(
           enemy.board,
-          B.attack({
-            x: command.data.x,
-            y: command.data.y,
-          }),
+          B.attack(attackCoords),
           ({ newBoard, attackResults }) => {
             enemy.board = newBoard;
 
@@ -107,6 +112,7 @@ export const attackHandler =
           }
         );
       }),
+
       E.match(
         (x) => ws.send(x),
         () => {}

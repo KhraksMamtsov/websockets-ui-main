@@ -5,6 +5,7 @@ import * as RA from "../../lib/readonlyArray";
 import type { Coords } from "../coords";
 import * as AR from "../attackResult";
 import * as D from "./deck";
+import { DeckState } from "./deck";
 
 export interface Ship {
   type: Type;
@@ -12,6 +13,12 @@ export interface Ship {
 }
 
 export const isKilled = (ship: Ship) => pipe(ship.decks, RA.every(D.isBroken));
+
+export const getBrokenDecks = (ship: Ship) =>
+  pipe(
+    ship.decks,
+    RA.filter((d) => d.state === DeckState.BROKEN)
+  );
 
 export const attack =
   (attackCoords: Coords) =>
