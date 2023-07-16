@@ -155,5 +155,5 @@ export const subtract =
   (from: ReadonlyArray<A>): ReadonlyArray<A> =>
     pipe(
       from,
-      filter((fromEl) => pipe(_this, some(eq(fromEl))))
+      filter((fromEl) => !pipe(_this, some(eq(fromEl))))
     );
