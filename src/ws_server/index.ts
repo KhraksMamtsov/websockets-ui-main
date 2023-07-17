@@ -35,15 +35,32 @@ const controller = createController([
 
 wss.on("error", console.error);
 
+const broadcast = (message: string) => {
+  wss.clients.forEach((client) => client.send(message));
+  console.log("📢", message);
+};
+
 wss.on("connection", (ws) => {
+  const answer = (message: string) => {
+    ws.send(message);
+    console.log("⬅️", message);
+  };
+
   ws.on("message", (data) => {
     if (data instanceof Buffer) {
-      controller(data)({ ws, wss, userDb, winnersDb, roomDb, gameDb });
+      controller(data)({
+        answer,
+        broadcast,
+        userDb,
+        winnersDb,
+        roomDb,
+        gameDb,
+      });
     }
   });
 
   ws.on("close", () => {
-    closeConnection({ ws, wss, userDb, winnersDb, roomDb, gameDb });
+    closeConnection({ answer, broadcast, userDb, winnersDb, roomDb, gameDb });
   });
 });
 wss.on("close", console.log);

@@ -4,10 +4,8 @@ import * as J from "../../lib/json";
 import * as E from "../../lib/either";
 import * as RA from "../../lib/readonlyArray";
 import type { Compute } from "../../lib/types";
-import type WebSocket from "ws";
 import type { UserDb } from "../../db/User.db";
 import type { WinnerDb } from "../../db/WinnerDb";
-import { WebSocketServer } from "ws";
 import type { OpenRoomDb } from "../../db/OpenRoomDb";
 import type { GameDb } from "../../db/Game.db";
 
@@ -27,9 +25,9 @@ const rawCommandTG = <C extends string>(commandType: C) =>
   });
 
 export type HandlerDeps = Readonly<{
-  ws: WebSocket;
+  answer: (message: string) => void;
   userDb: UserDb;
-  wss: WebSocketServer;
+  broadcast: (message: string) => void;
   roomDb: OpenRoomDb;
   gameDb: GameDb;
   winnersDb: WinnerDb;
@@ -60,8 +58,8 @@ export function createController(
       handler: (
         command: unknown
       ) => (deps: {
-        ws: WebSocket;
-        wss: WebSocketServer;
+        answer: (message: string) => void;
+        broadcast: (message: string) => void;
         roomDb: OpenRoomDb;
         gameDb: GameDb;
         userDb: UserDb;
@@ -72,12 +70,12 @@ export function createController(
 ): (
   data: Buffer
 ) => (deps: {
-  ws: WebSocket;
+  answer: (message: string) => void;
   roomDb: OpenRoomDb;
   userDb: UserDb;
+  broadcast: (message: string) => void;
   gameDb: GameDb;
   winnersDb: WinnerDb;
-  wss: WebSocketServer;
 }) => void {
   const findEndpoint = (type: string) =>
     pipe(
@@ -87,9 +85,14 @@ export function createController(
     );
 
   return (data) => {
+    const dataStr = data.toString();
     return pipe(
-      J.parse(data.toString()),
+      J.parse(dataStr),
       E.mapLeft(() => ParseError.NOT_JSON),
+      E.bitap(
+        () => console.log("➡️", dataStr),
+        (x) => console.log("➡️", x)
+      ),
       E.chain(E.fromPredicate(commandTg, () => ParseError.NOT_A_COMMAND)),
       E.bindTo("command"),
       E.bind("endpoint", ({ command }) => pipe(command.type, findEndpoint)),
@@ -107,8 +110,8 @@ export function createController(
           )
         )
       ),
-      E.get((x) => (deps: { ws: WebSocket }) => {
-        deps.ws.send(x);
+      E.get((x) => (deps: { answer: (message: string) => void }) => {
+        deps.answer(x);
       })
     );
   };

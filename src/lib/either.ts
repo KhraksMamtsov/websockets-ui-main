@@ -74,6 +74,11 @@ export const tap =
   <R>(fn: (value: R) => void) =>
   <L>(either: Either<L, R>): Either<L, R> =>
     either.tag === "left" ? either : (fn(either.right), either);
+export const bitap =
+  <L, R>(onLeft: (left: L) => void, onRight: (right: R) => void) =>
+  (either: Either<L, R>): Either<L, R> => (
+    either.tag === "left" ? onLeft(either.left) : onRight(either.right), either
+  );
 
 export const chain =
   <R, L1, R1>(fn: (value: R) => Either<L1, R1>) =>

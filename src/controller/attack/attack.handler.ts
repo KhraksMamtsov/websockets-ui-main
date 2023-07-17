@@ -20,9 +20,9 @@ import type { Board } from "../../entity/board";
 export const attackHandler =
   (getAttackCoords?: (board: Board) => Coords) =>
   (command: Pick<ParsedCommand<"attack", typeof attackTg>, "data">) =>
-  ({ userDb, ws, wss, gameDb, winnersDb }: HandlerDeps) => {
+  ({ userDb, answer, broadcast, gameDb, winnersDb }: HandlerDeps) => {
     pipe(
-      userDb.getByWebSocket(ws),
+      userDb.getByConnectionId(answer),
       E.fromOption(() => ErrAnsw.unAuth),
       E.bindTo("user"),
       E.bind("game", ({ user }) =>
@@ -63,12 +63,12 @@ export const attackHandler =
 
             if (doubles.length > 0) {
               G.players(x.game).forEach((p) =>
-                p.ws.send(turnAnswer({ playerId: x.user.id }))
+                p.answer(turnAnswer({ playerId: x.user.id }))
               );
             } else {
               realAttacks.forEach((ar) => {
                 G.players(x.game).forEach((player) =>
-                  player.ws.send(
+                  player.answer(
                     attackAnswer({
                       attackResult: ar,
                       currentPlayer: x.user,
@@ -86,12 +86,10 @@ export const attackHandler =
                     const winners = winnersDb.writeWinner(winner).getAll();
 
                     G.players(x.game).forEach((p) =>
-                      p.ws.send(finishAnswer({ player: winner }))
+                      p.answer(finishAnswer({ player: winner }))
                     );
 
-                    wss.clients.forEach((client) =>
-                      client.send(updateWinnersAnswer(winners))
-                    );
+                    broadcast(updateWinnersAnswer(winners));
                   }
                 )
               );
@@ -99,11 +97,11 @@ export const attackHandler =
               if (realAttacks.every(isMiss)) {
                 newGame = G.toggleTurn(newGame);
                 G.players(x.game).forEach((p) =>
-                  p.ws.send(turnAnswer({ playerId: enemy.player.id }))
+                  p.answer(turnAnswer({ playerId: enemy.player.id }))
                 );
               } else {
                 G.players(x.game).forEach((p) =>
-                  p.ws.send(turnAnswer({ playerId: x.user.id }))
+                  p.answer(turnAnswer({ playerId: x.user.id }))
                 );
               }
 
@@ -114,7 +112,7 @@ export const attackHandler =
       }),
 
       E.match(
-        (x) => ws.send(x),
+        (x) => answer(x),
         () => {}
       )
     );

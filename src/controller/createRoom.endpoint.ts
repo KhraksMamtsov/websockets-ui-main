@@ -10,9 +10,9 @@ export const createRoomEndpoint = endpoint(
   "create_room",
   tg.null,
   () =>
-    ({ ws, userDb, roomDb, wss }) => {
+    ({ answer, userDb, roomDb, broadcast }) => {
       pipe(
-        userDb.getByWebSocket(ws),
+        userDb.getByConnectionId(answer),
         E.fromOption(() => unAuth),
         E.chain((u) =>
           pipe(
@@ -24,11 +24,8 @@ export const createRoomEndpoint = endpoint(
           )
         ),
         E.match(
-          (error) => ws.send(error),
-          (updatedRooms) =>
-            wss.clients.forEach((client) =>
-              client.send(updateRoomsAnswer(updatedRooms))
-            )
+          (error) => answer(error),
+          (updatedRooms) => broadcast(updateRoomsAnswer(updatedRooms))
         )
       );
     }

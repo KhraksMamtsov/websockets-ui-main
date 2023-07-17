@@ -21,9 +21,9 @@ export const addShipsEndpoint = endpoint(
     ships: boardTg,
   }),
   (command) =>
-    ({ userDb, ws, gameDb }) => {
+    ({ userDb, answer, gameDb }) => {
       pipe(
-        userDb.getByWebSocket(ws),
+        userDb.getByConnectionId(answer),
         E.fromOption(() => ErrAnsw.unAuth),
         E.bindTo("user"),
         E.bind("game", ({ user }) =>
@@ -49,14 +49,14 @@ export const addShipsEndpoint = endpoint(
           )
         ),
         E.match(
-          (err) => ws.send(err),
+          answer,
           G.match(gameDb.updatePending, (activeGame) => {
             gameDb.createActive(activeGame);
 
             const currentPlayerIndex = activeGame[activeGame.turn].player.id;
 
             G.sides(activeGame).forEach((side) => {
-              side.player.ws.send(
+              side.player.answer(
                 startGameAnswer({
                   board: side.board,
                   currentPlayerIndex,
@@ -65,7 +65,7 @@ export const addShipsEndpoint = endpoint(
             });
 
             G.players(activeGame).forEach((player) => {
-              player.ws.send(
+              player.answer(
                 turnAnswer({
                   playerId: currentPlayerIndex,
                 })

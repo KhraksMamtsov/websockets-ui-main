@@ -1,7 +1,6 @@
 import { pipe } from "../lib/functions";
 import * as M from "../lib/map";
 import type { User } from "../entity/user";
-import type WebSocket from "ws";
 import * as RA from "../lib/readonlyArray";
 import * as O from "../lib/option";
 
@@ -17,18 +16,23 @@ export class UserDb {
       this.getAll(),
       RA.findFirst((user) => user.id === id)
     );
-  getByWebSocket = (ws: WebSocket) =>
+  getByConnectionId = (connectionId: (message: string) => void) =>
     pipe(
       [...this.#users],
-      RA.findFirst(([_, u]) => u.ws === ws),
+      RA.findFirst(([_, u]) => u.connectionId === connectionId),
       O.map(([_, u]) => u)
     );
 
-  create = (userData: { password: string; name: string; ws: WebSocket }) => {
+  create = (userData: {
+    password: string;
+    name: string;
+    answer: (message: string) => void;
+  }) => {
     const newUser: User = {
       name: userData.name,
       password: userData.password,
-      ws: userData.ws,
+      connectionId: userData.answer,
+      answer: userData.answer,
       id: this.#currentIndex,
     };
     this.#currentIndex++;
@@ -41,18 +45,19 @@ export class UserDb {
   updateOrCreate = (userData: {
     password: string;
     name: string;
-    ws: WebSocket;
+    answer: (message: string) => void;
   }) => {
     const newUser = pipe(
       this.getByName(userData.name),
       O.map((user) => {
-        return { ...user, ws: userData.ws } as User;
+        return { ...user, connectionId: userData.answer } as User;
       }),
       O.get(() => {
         const newUser: User = {
           name: userData.name,
           password: userData.password,
-          ws: userData.ws,
+          connectionId: userData.answer,
+          answer: userData.answer,
           id: this.#currentIndex,
         };
         this.#currentIndex++;

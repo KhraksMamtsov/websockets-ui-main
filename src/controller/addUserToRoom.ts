@@ -13,9 +13,9 @@ export const addUserToRoomEndpoint = endpoint(
     indexRoom: tg.number(),
   }),
   ({ data: { indexRoom } }) =>
-    ({ ws, userDb, roomDb, wss, gameDb }) => {
+    ({ answer, userDb, roomDb, broadcast, gameDb }) => {
       pipe(
-        userDb.getByWebSocket(ws),
+        userDb.getByConnectionId(answer),
         E.fromOption(() => ErrAnsw.unAuth),
         E.chain((user) =>
           pipe(
@@ -42,24 +42,20 @@ export const addUserToRoomEndpoint = endpoint(
             E.flatten
           )
         ),
-        E.match(
-          (error) => ws.send(error),
-          (success) => {
-            const updatedOpenRooms = success.deleteOpenRoom();
+        E.match(answer, (success) => {
+          const updatedOpenRooms = success.deleteOpenRoom();
 
-            wss.clients.forEach((client) =>
-              client.send(updateRoomsAnswer(updatedOpenRooms))
-            );
-            const game = success.startPendingGame();
-            const {
-              left: { player: playerL },
-              right: { player: playerR },
-            } = game;
+          broadcast(updateRoomsAnswer(updatedOpenRooms));
 
-            playerL.ws.send(createGameAnswer({ game, player: playerL }));
-            playerR.ws.send(createGameAnswer({ game, player: playerR }));
-          }
-        )
+          const game = success.startPendingGame();
+          const {
+            left: { player: playerL },
+            right: { player: playerR },
+          } = game;
+
+          playerL.answer(createGameAnswer({ game, player: playerL }));
+          playerR.answer(createGameAnswer({ game, player: playerR }));
+        })
       );
     }
 );

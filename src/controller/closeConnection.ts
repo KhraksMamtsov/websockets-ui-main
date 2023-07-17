@@ -2,7 +2,6 @@ import { flow, pipe } from "../lib/functions";
 import * as O from "../lib/option";
 import type { UserDb } from "../db/User.db";
 import type { GameDb } from "../db/Game.db";
-import type { WebSocket, WebSocketServer } from "ws";
 import { getEnemy } from "../entity/game";
 import { finishAnswer } from "./answers/finish.answer";
 import { updateWinnersAnswer } from "./answers/updateWinners.answer";
@@ -13,29 +12,27 @@ import { updateRoomsAnswer } from "./answers/updateRoom.answer";
 type Deps = {
   userDb: UserDb;
   gameDb: GameDb;
+  broadcast: (message: string) => void;
+  answer: (message: string) => void;
   winnersDb: WinnerDb;
   roomDb: OpenRoomDb;
-  ws: WebSocket;
-  wss: WebSocketServer;
 };
 export const closeConnection = ({
-  ws,
+  answer,
   userDb,
   gameDb,
-  wss,
   roomDb,
+  broadcast,
   winnersDb,
 }: Deps) => {
   pipe(
     O.Do,
-    O.bind("user", () => userDb.getByWebSocket(ws)),
+    O.bind("user", () => userDb.getByConnectionId(answer)),
     O.tap(
       flow(
         (x) => x.user,
         roomDb.deleteByOwner,
-        O.tap((newRooms) => {
-          wss.clients.forEach((c) => c.send(updateRoomsAnswer(newRooms)));
-        })
+        O.tap((newRooms) => broadcast(updateRoomsAnswer(newRooms)))
       )
     ),
     O.bind("game", ({ user }) => gameDb.getActiveByPlayer(user)),
@@ -44,11 +41,8 @@ export const closeConnection = ({
 
       const winners = winnersDb.writeWinner(enemy).getAll();
 
-      enemy.ws.send(finishAnswer({ player: enemy }));
-
-      wss.clients.forEach((client) =>
-        client.send(updateWinnersAnswer(winners))
-      );
+      enemy.answer(finishAnswer({ player: enemy }));
+      broadcast(updateWinnersAnswer(winners));
     })
   );
 };

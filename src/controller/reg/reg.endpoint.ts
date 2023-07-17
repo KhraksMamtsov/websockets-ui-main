@@ -14,7 +14,7 @@ export const regEndpoint = endpoint(
     password: tg.string(),
   }),
   (command) =>
-    ({ ws, userDb, roomDb, winnersDb }) => {
+    ({ answer, userDb, roomDb, winnersDb }) => {
       pipe(
         {
           name: command.data.name,
@@ -31,7 +31,7 @@ export const regEndpoint = endpoint(
               () =>
                 pipe(
                   userDb.create({
-                    ws,
+                    answer,
                     name: validUserDto.name,
                     password: validUserDto.password,
                   }),
@@ -40,7 +40,7 @@ export const regEndpoint = endpoint(
               (x) => {
                 if (x.password === validUserDto.password) {
                   userDb.updateOrCreate({
-                    ws,
+                    answer,
                     name: validUserDto.name,
                     password: validUserDto.password,
                   });
@@ -53,13 +53,13 @@ export const regEndpoint = endpoint(
           );
         }),
         E.match(
-          (error) => ws.send(error),
+          (error) => answer(error),
           (x) => {
-            ws.send(regSuccess(x));
+            answer(regSuccess(x));
 
-            ws.send(updateWinnersAnswer(winnersDb.getAll()));
+            answer(updateWinnersAnswer(winnersDb.getAll()));
 
-            ws.send(updateRoomsAnswer(roomDb.getAll()));
+            answer(updateRoomsAnswer(roomDb.getAll()));
           }
         )
       );
