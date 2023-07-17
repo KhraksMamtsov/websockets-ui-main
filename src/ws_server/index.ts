@@ -11,6 +11,7 @@ import { addShipsEndpoint } from "../controller/addShips/addShips.endpoint";
 import { attackEndpoint } from "../controller/attack/attack.endpoint";
 import { randomAttackEndpoint } from "../controller/attack/randomAttack.endpoint";
 import { closeConnection } from "../controller/closeConnection";
+import { singlePlayEndpoint } from "../controller/singlePlay.endpoint";
 
 const serverParameters = { port: 3000, host: "localhost" };
 const wss = new WebSocketServer(serverParameters, () => {
@@ -31,6 +32,7 @@ const controller = createController([
   addShipsEndpoint,
   attackEndpoint,
   randomAttackEndpoint,
+  singlePlayEndpoint,
 ] as any[]);
 
 wss.on("error", console.error);

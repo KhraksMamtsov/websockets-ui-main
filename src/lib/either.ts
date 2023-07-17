@@ -148,3 +148,8 @@ export const get =
       either,
       match(onLeft, (x) => x)
     );
+
+export const unify = <T extends Either<unknown, unknown>>(
+  either: T
+): [T] extends [Either<infer L, infer R>] ? Either<L, R> : never =>
+  either as any;

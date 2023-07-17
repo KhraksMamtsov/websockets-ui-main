@@ -39,39 +39,64 @@ export const addShipsEndpoint = endpoint(
             E.mapLeft((x) => invalidBoardConfiguration(command.data.ships, x))
           )
         ),
-        E.map((x) =>
-          pipe(
-            x.game,
-            G.setPlayersBoard({
+        E.map((x) => {
+          if (x.game.tag === "PendingGame") {
+            return G.setPlayersBoard({
               player: x.user,
               board: x.board,
-            })
-          )
-        ),
+            })(x.game);
+          } else {
+            return G.setSinglePlayerBoard({
+              board: x.board,
+            })(x.game);
+          }
+        }),
         E.match(
           answer,
-          G.match(gameDb.updatePending, (activeGame) => {
-            gameDb.createActive(activeGame);
+          G.matchLive(
+            (singleGame: G.SingleActiveGame) => {
+              gameDb.createSingleActive(singleGame);
+              const currentPlayerIndex = singleGame.player.player.id;
 
-            const currentPlayerIndex = activeGame[activeGame.turn].player.id;
-
-            G.sides(activeGame).forEach((side) => {
-              side.player.answer(
+              answer(
                 startGameAnswer({
-                  board: side.board,
+                  board: singleGame.player.board,
                   currentPlayerIndex,
                 })
               );
-            });
-
-            G.players(activeGame).forEach((player) => {
-              player.answer(
+              answer(
                 turnAnswer({
                   playerId: currentPlayerIndex,
                 })
               );
-            });
-          })
+            },
+            G.match(
+              (x) => gameDb.updatePending(x),
+              (activeGame) => {
+                gameDb.createActive(activeGame);
+
+                const currentPlayerIndex =
+                  activeGame[activeGame.turn].player.id;
+
+                G.sides(activeGame).forEach((side) => {
+                  side.player.answer(
+                    startGameAnswer({
+                      board: side.board,
+                      currentPlayerIndex,
+                    })
+                  );
+                });
+
+                G.players(activeGame).forEach((player) => {
+                  player.answer(
+                    turnAnswer({
+                      playerId: currentPlayerIndex,
+                    })
+                  );
+                });
+              }
+            )
+          )
         )
       );
     }
